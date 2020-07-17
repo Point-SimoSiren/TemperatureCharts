@@ -1,12 +1,75 @@
 ﻿@model IEnumerable<TempCharts.Models.Measurements>
 
-@{
-    ViewBag.Title = "data";
-}
 
-<h4>Mittausdata</h4>
+               
+    @section scripts {
+        <script type="text/javascript">
+
+            $(document).ready(function () {
+                $("#avaaGraafi").click(function () {
+
+                    alert("painettu");
+
+                    let url = '/Measurements/_HumidityGraphics/';
+                    var jsonData = $.ajax({
+                        url: url,
+                        dataType: 'json',
+                    }).done(function (results) {
+
+                        console.log(results);
+
+                        //Split timestamp and humidity value into separate arrays
+
+                        var labels = [], humData = [];
+                        for (let i = 0; i < results.length; i++) {
+                            humData.push(results[i].Humidity);
+                            labels.push(results[i].Time);
+                        }
+                        renderChart(humData, labels);
+                    });
+                });
+            
+               
+                function renderChart(dataValues, labelTexts) {
+                    var ctx = document.getElementById('barcanvas').getContext('2d');
+                    var barcanvas = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labelTexts,
+                            datasets: [{
+                                label: 'Humidity measurements',
+                                data: dataValues,
+                                backgroundColor: [
+                                    'rgba(255, 99, 232, 0.2)'
+                                ],
+                                borderColor: [
+                                    'rgba(255, 99, 132, 1)'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    ticks: {
+                                        beginAtZero: false,
+                                        stepSize: 1
+                                    }
+                                }]
+                            }
+                        }
+                    });
+                    $('#HumidityGraphModal').modal('show');
+            }
+            });
+        </script>
+    }
+
+
+<p style="font-size:25px; text-align:center;">Mittausdata</p>
 <br />
-<table class="table">
+<button id="avaaGraafi" class="myButton">graafi</button>
+<table class="table table-striped">
     <tr>
         <th>
             @Html.DisplayNameFor(model => model.Sender)
@@ -26,24 +89,29 @@
         <th></th>
     </tr>
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.Sender)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Time)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Temperature)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Humidity)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Pressure)
-        </td>
-    </tr>
-}
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Sender)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Time)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Temperature)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Humidity)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Pressure)
+            </td>
+        </tr>
+    }
 
 </table>
+
+@{
+    Html.RenderPartial("_HumidityGraphics");
+}

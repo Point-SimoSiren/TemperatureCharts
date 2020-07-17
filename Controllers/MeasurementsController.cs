@@ -8,6 +8,8 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using TempCharts.Models;
+using TempCharts.ViewModels;
+using System.Data.Entity.SqlServer;
 
 namespace TempCharts.Controllers
 {
@@ -21,100 +23,26 @@ namespace TempCharts.Controllers
             return View(await db.Measurements.ToListAsync());
         }
 
-        // GET: Measurements/Details/5
-        public async Task<ActionResult> Details(int? id)
+
+        public ActionResult _HumidityGraphics()
         {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Measurements measurements = await db.Measurements.FindAsync(id);
-            if (measurements == null)
-            {
-                return HttpNotFound();
-            }
-            return View(measurements);
+
+           // List<HumidityGraphics> humidataList = new List<HumidityGraphics>();
+
+            var humidityMeasurements = from m in db.Measurements
+                                       orderby m.Time
+                               select new HumidityGraphics
+                               {
+                                   //Time = m.Time.ToString("YY/MM/DD"),
+                                   Time = SqlFunctions.DateName("yy", m.Time) + "." + SqlFunctions.DateName("M", m.Time) + "." + SqlFunctions.DateName("day", m.Time) + "." + SqlFunctions.DateName("hour", m.Time) + "." + SqlFunctions.DateName("minute", m.Time),
+                                   Humidity = m.Humidity
+ 
+                               };
+
+            return Json(humidityMeasurements, JsonRequestBehavior.AllowGet);
+
         }
 
-        // GET: Measurements/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Measurements/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include = "MeasurementID,Sender,Time,Temperature,Humidity,Pressure")] Measurements measurements)
-        {
-            if (ModelState.IsValid)
-            {
-                db.Measurements.Add(measurements);
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
-            }
-
-            return View(measurements);
-        }
-
-        // GET: Measurements/Edit/5
-        public async Task<ActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Measurements measurements = await db.Measurements.FindAsync(id);
-            if (measurements == null)
-            {
-                return HttpNotFound();
-            }
-            return View(measurements);
-        }
-
-        // POST: Measurements/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit([Bind(Include = "MeasurementID,Sender,Time,Temperature,Humidity,Pressure")] Measurements measurements)
-        {
-            if (ModelState.IsValid)
-            {
-                db.Entry(measurements).State = EntityState.Modified;
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
-            }
-            return View(measurements);
-        }
-
-        // GET: Measurements/Delete/5
-        public async Task<ActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Measurements measurements = await db.Measurements.FindAsync(id);
-            if (measurements == null)
-            {
-                return HttpNotFound();
-            }
-            return View(measurements);
-        }
-
-        // POST: Measurements/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> DeleteConfirmed(int id)
-        {
-            Measurements measurements = await db.Measurements.FindAsync(id);
-            db.Measurements.Remove(measurements);
-            await db.SaveChangesAsync();
-            return RedirectToAction("Index");
-        }
 
         protected override void Dispose(bool disposing)
         {
